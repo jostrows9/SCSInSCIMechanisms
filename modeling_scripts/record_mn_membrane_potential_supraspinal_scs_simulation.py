@@ -146,6 +146,9 @@ def record_mn_membrane_potential_supraspinal_scs_simulation(scs_amp: float,
     membrane_potentials = [np.array(membrane_potentials[i])  if len(membrane_potentials[i]) > 0 else [] for i in range(num_mn)]
     simulation_time_vector = np.array(simulation_time_vector)
 
+    # Estimate EMG signal 
+    emg_signal = nf.estimate_emg_signal(mn_spike_times, simulation_duration=simulation_duration)
+    
     # Save simulation data
     if save_data_folder != '': 
         ensure_dir(save_data_folder)
@@ -169,6 +172,7 @@ def record_mn_membrane_potential_supraspinal_scs_simulation(scs_amp: float,
         data["mn_L"] = mn_L
         data["simulation_time_vector"] = simulation_time_vector
         data["membrane_potentials"] = membrane_potentials
+        data["emg_signal"] = emg_signal
 
         f=open(save_data_folder+data_filename,"wb")
         pickle.dump(data,f)

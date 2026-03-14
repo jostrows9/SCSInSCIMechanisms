@@ -1,3 +1,4 @@
 .DS_Store
 arm64/
 */__pycache__/
+x86_64/
