@@ -107,3 +107,42 @@ def create_inhomogeneous_input_neurons(N, max_rate, tStop=6000, offset_x=0, freq
         cell.play(vec)
         input_neurons.append(cell)
     return input_neurons
+
+
+def estimate_emg_signal(firings_raw, simulation_duration, delay_ms=10):
+    """
+    Estimate the EMG activity given the cell firings. 
+
+    Delay is the delay between the motoneuron action potential and the motor unit action potential (MUAP).
+    """
+    firings_int = [[int(spike) for spike in mn_firings] for mn_firings in firings_raw]
+    firings = np.array([[1 if i in mn_firings else 0 for i in range(0, simulation_duration)] for mn_firings in firings_int])
+
+    nCells = len(firings)
+    nSamples = firings.shape[1]
+
+    # MUAP duration between 5-10ms (Day et al 2001) -> 7.5 +-1 
+    meanLenMUAP = 8
+    stdLenMUAP = 1
+
+    nS = [int(meanLenMUAP+np.random.normal(0,stdLenMUAP)) for _ in range(nCells)]
+    amp = [abs(1+np.random.normal(0,0.2)) for _ in range(nCells)]
+    EMG = np.zeros(nSamples + max(nS)+delay_ms)
+    firingInd = []
+
+    # create MUAP shape
+    for i in range(nCells):
+        n40perc = int(nS[i]*0.4)
+        n60perc = nS[i]-n40perc
+        amplitudeMod = (1-(np.linspace(0,1,nS[i])**2)) * np.concatenate((np.ones(n40perc),1/np.linspace(1,3,n60perc)))
+        logBase = 1.05
+        freqMod = np.log(np.linspace(1,logBase**(4*np.pi),nS[i]))/np.log(logBase)
+        EMG_unit = amp[i]*amplitudeMod*np.sin(freqMod)
+        for j in range(nSamples):
+            if firings[i,j]==1:
+                firingInd.append(j)
+                EMG[j+delay_ms:j+delay_ms+nS[i]]=EMG[j+delay_ms:j+delay_ms+nS[i]]+EMG_unit
+    
+    EMG = EMG[:nSamples]
+    
+    return EMG

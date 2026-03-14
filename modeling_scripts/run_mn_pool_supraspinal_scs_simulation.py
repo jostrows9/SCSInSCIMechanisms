@@ -104,6 +104,9 @@ def run_mn_pool_supraspinal_scs_simulation(scs_amp: float,
     scs_pulse_times = [np.array(scs_pulse_times[i])  if len(scs_pulse_times[i]) > 0 else [] for i in range(num_scs_effective)]
     mn_spike_times = [np.array(mn_spike_times[i])  if len(mn_spike_times[i]) > 0 else [] for i in range(num_mn)]
 
+    # Estimate EMG signal 
+    emg_signal = nf.estimate_emg_signal(mn_spike_times, simulation_duration=simulation_duration)
+    
     # Save simulation data
     if save_data_folder != '': 
         ensure_dir(save_data_folder)
@@ -125,6 +128,7 @@ def run_mn_pool_supraspinal_scs_simulation(scs_amp: float,
         data["synaptic_weight_supra"] = synaptic_weight_supra
         data["W_supraspinal"] = W_supraspinal
         data["mn_L"] = mn_L
+        data["emg_signal"] = emg_signal
 
         f=open(save_data_folder+data_filename,"wb")
         pickle.dump(data,f)
